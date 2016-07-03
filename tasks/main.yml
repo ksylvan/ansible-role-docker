@@ -1,0 +1,72 @@
+---
+# based on https://docs.docker.com/engine/installation/linux/fedora/
+- name: Look in dockerproject repos
+  uri: url=https://yum.dockerproject.org/repo/main/fedora/ return_content=yes
+  register: fedora_repo
+
+- name: Look for the exact version
+  command: echo {{ansible_distribution_version}}
+  when: "'>{{ansible_distribution_version}}/<' in '{{fedora_repo.content}}'"
+  register: docker_exact_version
+  changed_when: false
+
+- name: Compose the docker repo URL
+  shell: |
+    url="https://yum.dockerproject.org/repo/main/fedora"
+    v=""
+    if [ "{{docker_exact_version.skipped is not undefined}}" = "True" ]; then
+      if [ {{ansible_distribution_version}} = "24" ]; then
+        v=23 # TODO: Remove this special case when F24 packages released
+      else
+        echo "ERROR: No repo for release {{ansible_distribution_version}}"
+        exit 1
+      fi
+    else
+      v="{{ansible_distribution_version}}"
+    fi
+    echo ${url}/${v}/
+  changed_when: false
+  register: docker_repo_url
+
+- name: Add dockerproject repository
+  yum_repository:
+    name: docker
+    description: Docker Repository
+    baseurl: "{{docker_repo_url.stdout}}"
+    enabled: 1
+    gpgcheck: 1
+    gpgkey: https://yum.dockerproject.org/gpg
+
+- name: SElinux running policy
+  shell: "sestatus | grep Loaded | awk -F: '{print $2}'"
+  changed_when: false
+  register: selinux_running_policy
+
+- name: SELinux running mode
+  shell: "sestatus | grep mode | awk -F: '{print $2}'"
+  changed_when: false
+  register: selinux_running_mode
+
+- name: Set up SELinux for Docker
+  selinux: policy={{selinux_running_policy.stdout|trim}} state={{docker_selinux}}
+  changed_when: '"{{selinux_running_mode.stdout|trim}}" != "{{docker_selinux}}"'
+
+- name: Install docker engine
+  dnf: name=docker-engine state=latest
+
+- name: Create docker group
+  group: name=docker system=yes state=present
+  notify: Restart docker service
+
+- name: Check {{ansible_user_id}} groups
+  command: groups {{ansible_user_id}}
+  register: docker_user_id_groups
+  changed_when: false
+
+- name: Add {{ansible_user_id}} to group docker
+  user: name={{ansible_user_id}} append=yes groups=docker
+  notify: Restart docker service
+  when: '"docker" not in "{{docker_user_id_groups.stdout}}"'
+
+- name: Docker daemon
+  service: name=docker enabled=yes state=started
