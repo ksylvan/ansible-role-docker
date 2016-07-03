@@ -5,9 +5,6 @@ galaxy_info:
   min_ansible_version: 2.1
   platforms:
     - name: Fedora
-      versions:
-        - 23
-        - 24
   galaxy_tags:
     - system
     - docker
