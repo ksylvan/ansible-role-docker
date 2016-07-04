@@ -1,5 +1,8 @@
 ---
 # based on https://docs.docker.com/engine/installation/linux/fedora/
+
+# Set up the external docker repository
+#
 - name: Look in dockerproject repos
   uri: url=https://yum.dockerproject.org/repo/main/fedora/ return_content=yes
   register: fedora_repo
@@ -37,6 +40,8 @@
     gpgcheck: 1
     gpgkey: https://yum.dockerproject.org/gpg
 
+# Fix up SELinux if necessary (uses docker_selinux variable)
+#
 - name: SElinux running policy
   shell: "sestatus | grep Loaded | awk -F: '{print $2}'"
   changed_when: false
@@ -51,22 +56,24 @@
   selinux: policy={{selinux_running_policy.stdout|trim}} state={{docker_selinux}}
   changed_when: '"{{selinux_running_mode.stdout|trim}}" != "{{docker_selinux}}"'
 
+# Set up the docker group (and add USER to it)
+#
+- name: Ensure docker group exists
+  group: name=docker system=yes state=present
+
+- name: Check groups of user {{ansible_env.USER}}
+  command: groups {{ansible_env.USER}}
+  register: docker_user_groups
+  changed_when: false
+
+- name: Add user {{ansible_env.USER}} to group docker
+  user: name={{ansible_env.USER}} append=yes groups=docker
+  when: '"docker" not in "{{docker_user_groups.stdout}}"'
+
+# Install docker and enable it
+#
 - name: Install docker engine
   dnf: name=docker-engine state=latest
 
-- name: Create docker group
-  group: name=docker system=yes state=present
-  notify: Restart docker service
-
-- name: Check {{ansible_user_id}} groups
-  command: groups {{ansible_user_id}}
-  register: docker_user_id_groups
-  changed_when: false
-
-- name: Add {{ansible_user_id}} to group docker
-  user: name={{ansible_user_id}} append=yes groups=docker
-  notify: Restart docker service
-  when: '"docker" not in "{{docker_user_id_groups.stdout}}"'
-
-- name: Docker daemon
+- name: Enable docker daemon
   service: name=docker enabled=yes state=started

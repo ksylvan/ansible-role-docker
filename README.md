@@ -36,7 +36,7 @@ How to install the latest Docker on Fedora systems:
 
     - hosts: servers
       roles:
-         - { role: ksylvan.docker, docker_selinux: enforcing  }
+        - ksylvan.docker
 
 Note: Fedora 24 currently needs to set SELinux to permissive mode till
 the interaction between Docker and SELinux are fixed.
