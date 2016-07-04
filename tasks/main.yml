@@ -56,18 +56,18 @@
   selinux: policy={{selinux_running_policy.stdout|trim}} state={{docker_selinux}}
   changed_when: '"{{selinux_running_mode.stdout|trim}}" != "{{docker_selinux}}"'
 
-# Set up the docker group (and add USER to it)
+# Set up the docker group (and add SUDO_USER to it)
 #
 - name: Ensure docker group exists
   group: name=docker system=yes state=present
 
-- name: Check groups of user {{ansible_env.USER}}
-  command: groups {{ansible_env.USER}}
+- name: Check groups of user {{ansible_env.SUDO_USER}}
+  command: groups {{ansible_env.SUDO_USER}}
   register: docker_user_groups
   changed_when: false
 
-- name: Add user {{ansible_env.USER}} to group docker
-  user: name={{ansible_env.USER}} append=yes groups=docker
+- name: Add user {{ansible_env.SUDO_USER}} to group docker
+  user: name={{ansible_env.SUDO_USER}} append=yes groups=docker
   when: '"docker" not in "{{docker_user_groups.stdout}}"'
 
 # Install docker and enable it
