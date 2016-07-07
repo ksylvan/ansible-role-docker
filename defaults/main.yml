@@ -1,7 +1,8 @@
 ---
 # defaults file for docker
 #
-# Needed for Fedora 24 - See https://github.com/docker/docker/issues/23981
+# Fedora 24 hack needed - See https://github.com/docker/docker/issues/23981
+# Alternatively, you may set docker_selinux to permissive
 #
 docker_selinux: enforcing
 #

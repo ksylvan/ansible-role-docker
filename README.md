@@ -43,8 +43,12 @@ Set the `docker_testing`
 variable to `true` in order to use the `testing` repository instead of the
 `main` repository.
 
-Note: Fedora 24 currently needs to set SELinux to permissive mode till
-the interaction between Docker and SELinux are fixed.
+Note: Fedora 24 currently has problems with SELinux. This role will add
+a local policy in `/usr/local/selinux/` called `hack-docker` which fixes this. If you prefer not to do this, then set `docker_selinux` to
+`permissive` and the `hack-docker` policy will not be installed.
+
+See [Cannot start docker engine
+due to SELinux](https://github.com/docker/docker/issues/23981) for details.
 
 License
 -------
