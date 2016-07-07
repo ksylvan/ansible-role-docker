@@ -1,0 +1,12 @@
+# Related to https://github.com/docker/docker/issues/23981 for Fedora 24
+#
+module hack-docker 1.0;
+
+require {
+	type init_t;
+	type unconfined_service_t;
+	class unix_stream_socket { bind create listen setopt };
+}
+
+#============= init_t ==============
+allow init_t unconfined_service_t:unix_stream_socket { bind create listen setopt };

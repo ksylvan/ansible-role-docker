@@ -58,6 +58,27 @@
   selinux: policy={{selinux_running_policy.stdout|trim}} state={{docker_selinux}}
   changed_when: '"{{selinux_running_mode.stdout|trim}}" != "{{docker_selinux}}"'
 
+- block:
+    - name: Ensure /usr/local/selinux exists
+      file: dest=/usr/local/selinux state=directory
+    - name: Install local policy file to hack selinux to allow docker startup
+      copy: src=hack-docker.te dest=/usr/local/selinux/hack-docker.te
+    - name: Compile and install local policy
+      shell: |
+        cd /usr/local/selinux
+        already_hacked_docker=$(semodule -l | grep hack-docker)
+        if [ -z "${already_hacked_docker}" ]; then
+          checkmodule -M -m -o hack-docker.mod hack-docker.te
+          semodule_package -o hack-docker.pp -m hack-docker.mod
+          semodule -X 300 -i hack-docker.pp
+        else
+          echo "hack-docker selinux module already loaded. No change."
+        fi
+      register: semodule_output
+      changed_when: '"No change" not in "{{semodule_output.stdout}}"'
+    - debug: var=semodule_output.stdout
+  when: ansible_distribution_version == '24' and docker_selinux == 'enforcing'
+
 # Set up the docker group (and add SUDO_USER to it)
 #
 - name: Ensure docker group exists
