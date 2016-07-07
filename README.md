@@ -15,6 +15,7 @@ Role Variables
 
 | Name | Possible Values | Default Value |
 |----------|-----------------|-------------|
+| docker_testing | boolean | False |
 | docker_selinux | enforcing, permissive, disabled | enforcing |
 
 Dependencies
@@ -38,6 +39,10 @@ How to install the latest Docker on Fedora systems:
       roles:
         - ksylvan.docker
 
+Set the `docker_testing`
+variable to `true` in order to use the `testing` repository instead of the
+`main` repository.
+
 Note: Fedora 24 currently needs to set SELinux to permissive mode till
 the interaction between Docker and SELinux are fixed.
 
@@ -48,5 +53,5 @@ GPLv3
 
 Author Information
 ------------------
-
-*Kayvan Sylvan <kayvan.sylvan@gmail.com> - https://github.com/ksylvan*
+*Kayvan Sylvan <kayvan.sylvan@gmail.com> -
+[https://github.com/ksylvan](https://github.com/ksylvan)*

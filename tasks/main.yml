@@ -3,8 +3,16 @@
 
 # Set up the external docker repository
 #
-- name: Look in dockerproject repos
-  uri: url=https://yum.dockerproject.org/repo/main/fedora/ return_content=yes
+- name: Base URL for testing repo
+  set_fact: docker_repo_base_url=https://yum.dockerproject.org/repo/testing
+  when: docker_testing
+
+- name: Base URL for main repo
+  set_fact: docker_repo_base_url=https://yum.dockerproject.org/repo/main
+  when: not docker_testing
+
+- name: Look in dockerproject main repos
+  uri: url={{docker_repo_base_url}}/fedora/ return_content=yes
   register: fedora_repo
 
 - name: Look for the exact version
@@ -15,19 +23,13 @@
 
 - name: Compose the docker repo URL
   shell: |
-    url="https://yum.dockerproject.org/repo/main/fedora"
-    v=""
     if [ "{{docker_exact_version.skipped is not undefined}}" = "True" ]; then
-      if [ {{ansible_distribution_version}} = "24" ]; then
-        v=23 # TODO: Remove this special case when F24 packages released
-      else
-        echo "ERROR: No repo for release {{ansible_distribution_version}}"
-        exit 1
-      fi
+      echo "ERROR: No repo for release {{ansible_distribution_version}}"
+      exit 1
     else
       v="{{ansible_distribution_version}}"
     fi
-    echo ${url}/${v}/
+    echo {{docker_repo_base_url}}/fedora/${v}/
   changed_when: false
   register: docker_repo_url
 

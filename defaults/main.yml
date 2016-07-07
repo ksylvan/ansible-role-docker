@@ -1,3 +1,10 @@
 ---
 # defaults file for docker
+#
+# Needed for Fedora 24 - See https://github.com/docker/docker/issues/23981
+#
 docker_selinux: enforcing
+#
+# Use the testing repo instead of the main repo at yum.dockerproject.org
+#
+docker_testing: false
