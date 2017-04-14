@@ -46,6 +46,9 @@ variable to `true` in order to use the `testing` repository instead of the
 Change Log
 ----------
 
+#### 1.2.1 - 2017-04-13
+- Fix some of the conditionals in tasks/main.yml
+
 #### 1.2.0 - 2016-07-30
 - Remove Fedora 24 SELinux hack related to
 https://github.com/docker/docker/issues/23981

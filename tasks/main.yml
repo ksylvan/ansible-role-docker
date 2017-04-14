@@ -17,7 +17,7 @@
 
 - name: Look for the exact version
   command: echo {{ansible_distribution_version}}
-  when: "'>{{ansible_distribution_version}}/<' in '{{fedora_repo.content}}'"
+  when: ('>' + ansible_distribution_version + '/<') in fedora_repo.content
   register: docker_exact_version
   changed_when: false
 
@@ -56,7 +56,7 @@
 
 - name: Set up SELinux for Docker
   selinux: policy={{selinux_running_policy.stdout|trim}} state={{docker_selinux}}
-  changed_when: '"{{selinux_running_mode.stdout|trim}}" != "{{docker_selinux}}"'
+  changed_when: selinux_running_mode.stdout|trim() != docker_selinux
 
 # Set up the docker group (and add SUDO_USER to it)
 #
@@ -70,7 +70,7 @@
 
 - name: Add user {{ansible_env.SUDO_USER}} to group docker
   user: name={{ansible_env.SUDO_USER}} append=yes groups=docker
-  when: '"docker" not in "{{docker_user_groups.stdout}}"'
+  when: not ('docker' in docker_user_groups.stdout)
 
 # Install docker and enable it
 #
